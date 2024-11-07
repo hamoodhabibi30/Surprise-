@@ -1,1 +1,215 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import { Heart, Landmark, Coffee, Wine, Music, Camera, Star, MapPin } from 'lucide-react';
+import Confetti from 'react-confetti';
 
+const ParisRomanticSurprise = () => {
+  const [stage, setStage] = useState(0);
+  const [hearts, setHearts] = useState([]);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [typing, setTyping] = useState('');
+  const [noButtonStyle, setNoButtonStyle] = useState({
+    position: 'static',
+    transform: 'none'
+  });
+  const [showFinalMessage, setShowFinalMessage] = useState(false);
+  const [noAttempts, setNoAttempts] = useState(0);
+  const [windowSize, setWindowSize] = useState({
+    width: typeof window !== 'undefined' ? window.innerWidth : 800,
+    height: typeof window !== 'undefined' ? window.innerHeight : 600
+  });
+
+  // Paris-themed messages with different landmarks
+  const messages = [
+    "Beneath the sparkling lights of the Eiffel Tower... ✨",
+    "Strolling through the enchanting gardens of Versailles... 🌸",
+    "Sharing macarons at the charming Champs-Élysées... 🍪",
+    "Watching the sunset from Montmartre... 🌅",
+    "Will you be my Valentine in the city of love? 💝"
+  ];
+
+  // Playful responses when clicking "No"
+  const noMessages = [
+    "But we could watch the sunrise at Notre-Dame! 🌅",
+    "Think of the romantic Seine river cruise! ⛴️",
+    "We could share coffee at a cute café! ☕",
+    "Picture us at the Louvre together! 🎨",
+    "Let's dance under the Arc de Triomphe! 💃",
+    "Imagine the view from the Eiffel Tower! 🗼",
+    "We could explore the Palace of Versailles! 👑",
+    "Picnic in Luxembourg Gardens? 🧺",
+    "Sunset at Sacré-Cœur? ⛪",
+    "One more pastry to change your mind? 🥐"
+  ];
+
+  // Paris-themed background icons
+  const parisIcons = [
+    <Landmark key="landmark" className="w-8 h-8 text-pink-300" />,
+    <Coffee key="coffee" className="w-8 h-8 text-pink-400" />,
+    <Wine key="wine" className="w-8 h-8 text-pink-500" />,
+    <Camera key="camera" className="w-8 h-8 text-pink-600" />,
+    <MapPin key="mappin" className="w-8 h-8 text-pink-700" />,
+    <Music key="music" className="w-8 h-8 text-pink-800" />
+  ];
+
+  // Handle heart animation click
+  const handleHeartClick = useCallback(() => {
+    if (stage < messages.length - 1) {
+      setStage(prev => prev + 1);
+      const newHearts = Array(3).fill(null).map(() => ({
+        id: Date.now() + Math.random(),
+        left: `${Math.random() * 100}%`,
+        delay: Math.random() * 1000,
+        size: 20 + Math.random() * 30,
+        color: `hsl(${330 + Math.random() * 30}, ${70 + Math.random() * 30}%, ${50 + Math.random() * 20}%)`,
+        rotation: Math.random() * 360
+      }));
+      setHearts(prev => [...prev, ...newHearts]);
+    }
+  }, [stage, messages.length]);
+
+  // Typing effect for Paris-themed messages
+  useEffect(() => {
+    const text = messages[stage];
+    let currentIndex = 0;
+    const typingInterval = setInterval(() => {
+      if (currentIndex <= text.length) {
+        setTyping(text.slice(0, currentIndex));
+        currentIndex++;
+      } else {
+        clearInterval(typingInterval);
+      }
+    }, 50);
+
+    return () => clearInterval(typingInterval);
+  }, [stage, messages]);
+
+  // Handle mouse move for evasive "No" button
+  const handleMouseMove = useCallback((e) => {
+    if (noAttempts > 0) {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width;
+      const y = (e.clientY - rect.top) / rect.height;
+
+      setNoButtonStyle({
+        position: 'absolute',
+        left: `${(1 - x) * 80}%`,
+        top: `${(1 - y) * 80}%`,
+        transform: `translate(-50%, -50%) rotate(${Math.random() * 360}deg)`,
+        transition: 'all 0.3s ease-out'
+      });
+    }
+  }, [noAttempts]);
+
+  // Handle "No" click to increase attempts and show random message
+  const handleNoClick = useCallback(() => {
+    setNoAttempts(prev => prev + 1);
+    const randomMessage = noMessages[Math.floor(Math.random() * noMessages.length)];
+    setTyping(randomMessage);
+  }, [noMessages]);
+
+  // Handle "Yes" click for confetti and final message
+  const handleYesClick = useCallback(() => {
+    setShowConfetti(true);
+    setShowFinalMessage(true);
+    setTyping("You've made me the happiest person in Paris! Let's create our own love story in the city of lights! 💝✨");
+  }, []);
+
+  return (
+    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-pink-100 to-purple-100">
+      {showConfetti && (
+        <Confetti
+          width={windowSize.width}
+          height={windowSize.height}
+          numberOfPieces={500}
+          gravity={0.05}
+        />
+      )}
+
+      <div
+        className="absolute inset-0 transition-all duration-1000"
+        style={{
+          background: `radial-gradient(circle at ${hearts.length ? Math.random() * 100 : 50}% ${hearts.length ? Math.random() * 100 : 50}%, 
+            ${stage === 4 ? '#ff69b4, #d53f8c' : '#fce7f3, #fbcfe8'})`
+        }}
+      >
+        {parisIcons.map((icon, index) => (
+          <div
+            key={index}
+            className="absolute animate-float-slow opacity-20"
+            style={{
+              left: `${(index * 20) + Math.sin(Date.now() / 1000 + index) * 10}%`,
+              top: `${(index * 20) + Math.cos(Date.now() / 1000 + index) * 10}%`,
+              animation: `float ${3 + Math.random() * 2}s ease-in-out infinite`,
+              animationDelay: `${index * 0.5}s`
+            }}
+          >
+            {icon}
+          </div>
+        ))}
+      </div>
+
+      {hearts.map(heart => (
+        <div
+          key={heart.id}
+          className="absolute animate-float"
+          style={{
+            left: heart.left,
+            animationDelay: `${heart.delay}ms`,
+            width: `${heart.size}px`,
+            height: `${heart.size}px`,
+            color: heart.color,
+            transform: `rotate(${heart.rotation}deg)`
+          }}
+        >
+          <Heart fill="currentColor" className="animate-pulse" />
+        </div>
+      ))}
+
+      <div
+        className="relative z-10 min-h-screen flex flex-col items-center justify-center p-4"
+        onMouseMove={handleMouseMove}
+      >
+        <div className="text-4xl font-bold text-white mb-8 h-20 text-center min-h-[5rem] text-shadow-lg animate-pulse">
+          {typing}
+        </div>
+
+        {stage < messages.length - 1 ? (
+          <button
+            onClick={handleHeartClick}
+            className="transform hover:scale-110 transition-all duration-300 focus:outline-none relative"
+          >
+            <div className="relative">
+              <Heart 
+                className="w-24 h-24 text-pink-500 animate-pulse" 
+                fill={stage > 0 ? "currentColor" : "none"}
+              />
+              <Star className="absolute top-0 left-0 w-24 h-24 text-yellow-300 animate-spin-slow opacity-50" />
+            </div>
+          </button>
+        ) : !showFinalMessage ? (
+          <div className="flex flex-col items-center gap-6">
+            <button
+              onClick={handleYesClick}
+              className="px-8 py-4 bg-pink-500 text-white rounded-full text-xl font-bold hover:bg-pink-600 transform hover:scale-110 transition-all duration-300 shadow-lg"
+            >
+              Yes! Let's paint Paris with our love! 💝
+            </button>
+            <button
+              onClick={handleNoClick}
+              className="px-8 py-4 bg-gray-400 text-white rounded-full text-xl font-bold hover:bg-gray-500 transition-all duration-300 shadow-lg"
+              style={noButtonStyle}
+            >
+              I need more convincing... 💭
+            </button>
+          </div>
+        ) : (
+          <div className="text-3xl text-pink-600 font-bold text-center animate-bounce">
+            Our Paris adventure begins! 🗼✨
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default ParisRomanticSurprise;
